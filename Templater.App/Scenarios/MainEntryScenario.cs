@@ -1,10 +1,10 @@
 namespace Templater.App.Scenarios;
 
-public static class MainEntryScenario
+public class MainEntryScenario : BaseScenario<Unit>
 {
-    public static void Execute()
+    public override void Execute(Unit _)
     {
-        Choice<MainActions>[] mainChoices = Enum.GetValues<MainActions>()
+        var mainChoices = Enum.GetValues<MainActions>()
             .Select(e => new Choice<MainActions>(e))
             .ToArray();
 
@@ -14,10 +14,18 @@ public static class MainEntryScenario
                 .PageSize(10)
                 .AddChoices(mainChoices) 
         );
-    
-        action.Value switch
+
+        IScenario? toExecute = action.Value switch
         {
-            // TODO: fix
-        } 
+            MainActions.ManageArchitectures => new ArchitectureManageScenario(),
+            MainActions.GenerateTemplates => new ArchitectureManageScenario(),
+            MainActions.ManageTemplates => new ArchitectureManageScenario(),
+            _ => null
+        };
+
+        if (toExecute != null)
+        {
+            ScenarioManager.GoTo(toExecute);
+        }
     }
 }

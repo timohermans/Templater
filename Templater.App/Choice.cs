@@ -17,4 +17,6 @@ public class Choice<T> where T : Enum
         Display = display;
         Value = e;
     }
+    
+    public override string ToString() => Display;
 }
