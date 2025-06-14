@@ -1,31 +1,35 @@
 namespace Templater.App.Scenarios;
 
-public class MainEntryScenario : BaseScenario<Unit>
+public interface IMainEntryScenario : IScenario
 {
-    public override void Execute(Unit _)
+}
+
+public class MainEntryScenario(
+    IAnsiConsole console,
+    IScenarioManager scenarioManager,
+    IArchitectureManageScenario archManageScenario) : IMainEntryScenario
+{
+    public async Task ExecuteAsync()
     {
         var mainChoices = Enum.GetValues<MainActions>()
             .Select(e => new Choice<MainActions>(e))
             .ToArray();
 
-        var action = AnsiConsole.Prompt(
+        var action = await console.PromptAsync(
             new SelectionPrompt<Choice<MainActions>>()
                 .Title("[underline red]What[/] would you like to do?")
                 .PageSize(10)
-                .AddChoices(mainChoices) 
+                .AddChoices(mainChoices)
         );
 
-        IScenario? toExecute = action.Value switch
+        switch (action.Value)
         {
-            MainActions.ManageArchitectures => new ArchitectureManageScenario(),
-            MainActions.GenerateTemplates => new ArchitectureManageScenario(),
-            MainActions.ManageTemplates => new ArchitectureManageScenario(),
-            _ => null
-        };
-
-        if (toExecute != null)
-        {
-            ScenarioManager.GoTo(toExecute);
+            case MainActions.ManageArchitectures:
+                await scenarioManager.GoToAsync(archManageScenario);
+                break;
+            default:
+                await scenarioManager.GoBackAsync();
+                break;
         }
     }
 }

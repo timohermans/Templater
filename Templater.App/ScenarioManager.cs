@@ -2,18 +2,28 @@ using Templater.App.Scenarios;
 
 namespace Templater.App;
 
-public static class ScenarioManager
+public interface IScenarioManager
 {
-    private static readonly List<KeyValuePair<IScenario, object>> _scenarios = [];
-    public static IReadOnlyList<KeyValuePair<IScenario, object>> Scenarios => _scenarios.AsReadOnly();
+    Task GoToAsync(IScenario scenario);
+    Task GoBackAsync();
+}
 
-    public static void GoTo(IScenario scenario) => GoTo(scenario, null);
-    public static void GoTo<TArgs>(BaseScenario<TArgs> scenario, TArgs? args) => GoTo(scenario as IScenario, args);
-    
-    private static void GoTo(IScenario scenario, object? args)
+public class ScenarioManager() : IScenarioManager
+{
+    private readonly List<IScenario> _scenarios = [];
+
+    public async Task GoToAsync(IScenario scenario)
     {
-        var scenarioArgs = args ?? new Unit();
-        _scenarios.Add(new KeyValuePair<IScenario, object>(scenario, scenarioArgs));
-        scenario.Execute(scenarioArgs);
+        _scenarios.Add(scenario);
+        await scenario.ExecuteAsync();
+    }
+
+    public async Task GoBackAsync()
+    {
+        if (_scenarios.Count <= 1) return;
+
+        _scenarios.RemoveAt(_scenarios.Count - 1);
+        var scenario = _scenarios.Last();
+        await scenario.ExecuteAsync();
     }
 }
